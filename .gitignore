@@ -1,0 +1,16 @@
+# Python environment
+.venv/
+venv/
+
+# Dataset (do not upload MRI images)
+dataset/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Model files (we can manage these separately later)
+models/
