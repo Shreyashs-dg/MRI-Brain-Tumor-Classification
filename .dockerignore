@@ -1,0 +1,12 @@
+
+.venv/
+venv/
+.git/
+.gitignore
+dataset/
+notebooks/
+images/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+README.md
