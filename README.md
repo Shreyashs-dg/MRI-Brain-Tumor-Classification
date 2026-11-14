@@ -1,11 +1,11 @@
-#  MRI Brain Tumor Classification
+# 🧠 MRI Brain Tumor Classification
 
 A deep-learning project that classifies a brain MRI scan into one of four classes: **glioma**, **meningioma**, **pituitary tumor**, or **no tumor**. It covers the full workflow: data exploration, preprocessing, ANN and CNN models, evaluation, tuning, and deployment as a Streamlit web app.
 
-> **Disclaimer:** This is an educational project. It is **not a medical diagnostic tool** and must not be used for diagnosis or treatment decisions. Always consult a qualified doctor.
+> ⚠️ **Disclaimer:** This is an educational project. It is **not a medical diagnostic tool** and must not be used for diagnosis or treatment decisions. Always consult a qualified doctor.
 
-**Live demo:** TODO: add your Streamlit link
-** Dataset:** TODO: add dataset name and source link
+**🔗 Live demo:** [mri-brain-tumor-classification.streamlit.app](https://mri-brain-tumor-classification-nnwhsp2cmnqjvvejyah6bn.streamlit.app/)
+**📂 Dataset:** [Brain Tumor MRI Dataset (Kaggle, Masoud Nickparvar)](https://www.kaggle.com/datasets/masoudnickparvar/brain-tumor-mri-dataset)
 
 ![App screenshot](images/app_screenshot.png)
 
@@ -14,7 +14,7 @@ A deep-learning project that classifies a brain MRI scan into one of four classe
 ## Highlights
 
 - Full pipeline: EDA → preprocessing → ANN → CNN → evaluation → tuning → deployment
-- Compared an ANN baseline with a CNN on a held-out **Testing set of 1,600 images** the models never saw during training
+- Compared an ANN baseline (74.5%) with a CNN (83.1%) and a tuned CNN (**86.2%**) on a held-out **Testing set of 1,600 images** the models never saw during training
 - Found and handled data problems: mixed image formats, different image sizes, and duplicate images
 - Reduced overfitting with dropout and a learning-rate and model-size search
 - Deployed as a Streamlit app, with a Dockerfile for containerized runs
@@ -29,36 +29,42 @@ All numbers below are measured on the **Testing folder (1,600 images, 400 per cl
 |---|---|---|
 | ANN (fully connected) | 74.5% | 0.74 |
 | CNN (baseline) | 83.1% | 0.83 |
-| **Optimized CNN** (dropout 0.5, lr 0.001) | **TODO: add test accuracy** | **TODO** |
+| **Optimized CNN** (dropout 0.5, lr 0.001) | **86.2%** | **0.86** |
 
-The optimized CNN reached about **97% training accuracy and 93.3% validation accuracy**, with a much smaller gap between the two than the baseline CNN (about 99% and 90%).
+The optimized CNN reached about **97% training accuracy and 93.3% validation accuracy**, with a much smaller gap between the two than the baseline CNN (about 99% and 90%). Its test loss (0.98) is also much lower than the baseline CNN's (1.78), which means it makes fewer very confident wrong predictions.
 
 ![ANN vs CNN test accuracy](images/05_test_accuracy_comparison.png)
 
-**Baseline CNN, per class (Testing folder):**
+**Optimized CNN, per class (Testing folder):**
 
 | Class | Precision | Recall | F1 |
 |---|---|---|---|
-| glioma | 0.83 | 0.70 | 0.76 |
-| meningioma | 0.76 | 0.81 | 0.78 |
-| notumor | 0.81 | 0.99 | 0.89 |
-| pituitary | 0.96 | 0.82 | 0.88 |
+| glioma | 0.90 | 0.69 | 0.78 |
+| meningioma | 0.80 | 0.83 | 0.82 |
+| notumor | 0.83 | 1.00 | 0.91 |
+| pituitary | 0.93 | 0.93 | 0.93 |
 
-![Confusion matrices: ANN and CNN](images/05_confusion_matrices.png)
+![Confusion matrices: ANN and baseline CNN](images/05_confusion_matrices.png)
 
 ![Optimized CNN confusion matrix](images/06_optimized_cnn_confusion_matrix.png)
 
 **What the results show**
-- The CNN beats the ANN by about 9 percentage points. Flattening an image for an ANN throws away the 2D structure that a CNN keeps.
-- "No tumor" is found almost perfectly (recall 0.99), but the baseline CNN labels **95 of 1,200 real tumor images as "notumor"**. In a medical setting this is the most serious kind of mistake.
-- Glioma has the lowest recall (0.70), and glioma and meningioma are the classes most often confused.
-- Validation accuracy was higher than test accuracy, because validation images were a random slice of the Training folder. The Testing folder is the honest number to report.
+- The baseline CNN beats the ANN by about 9 percentage points. Flattening an image for an ANN throws away the 2D structure that a CNN keeps.
+- Tuning and dropout improved the CNN by about 3 more points (83.1% to **86.2%**) and cut the test loss from 1.78 to 0.98.
+- Pituitary tumors are recognized best (F1 0.93). "No tumor" is almost never missed (recall 1.00).
+- Glioma has the lowest recall (0.69), and glioma and meningioma are the classes most often confused.
+- The optimized CNN labels **80 of 1,200 real tumor images as "notumor"** (the baseline CNN: 95). In a medical setting this is the most serious kind of mistake, and it is the main weakness.
+- Validation accuracy (about 93%) was higher than test accuracy (86.2%), because validation images were a random slice of the Training folder. The Testing folder is the honest number to report.
+
+**Examples of mistakes made by the baseline CNN:**
+
+![Error examples](images/05_error_examples.png)
 
 ---
 
 ## Dataset
 
-**7,200 MRI images** in four classes, already split into folders:
+Source: [Brain Tumor MRI Dataset on Kaggle](https://www.kaggle.com/datasets/masoudnickparvar/brain-tumor-mri-dataset). The version used in this project has **7,200 MRI images** in four classes, already split into folders:
 
 | Split | glioma | meningioma | notumor | pituitary | Total |
 |---|---|---|---|---|---|
@@ -88,14 +94,14 @@ The optimized CNN reached about **97% training accuracy and 93.3% validation acc
 | 5 | `05_model_evaluation` | Test accuracy, confusion matrices, precision/recall/F1, error analysis |
 | 6 | `06_model_optimization` | Model-size, learning-rate and dropout experiments; final optimized CNN |
 
+![Resize example](images/02_resize_example.png)
+
 **Final model:** `Conv(32) → MaxPool → Conv(64) → MaxPool → Flatten → Dense(128) → Dropout(0.5) → Dense(4, softmax)`, about 25.7 million parameters. Input: a 224 x 224 grayscale image. Training: Adam (learning rate 0.001), sparse categorical cross-entropy, batch size 16, 10 epochs.
 
 **Tuning findings (validation set)**
 - Model size: small, baseline and large CNNs reached about the same best validation accuracy (92% to 93%), so the baseline size was kept.
 - Learning rate: 0.01 failed to learn (25%, which is guessing for 4 classes), 0.0001 was slower, and **0.001** was best.
 - Dropout: dropout 0.5 shrank the gap between training and validation accuracy from about 7 points to about 3 points and gave the lowest validation loss.
-
-![Dropout comparison](images/06_dropout_comparison.png)
 
 ---
 
@@ -165,8 +171,8 @@ Python 3.13 · TensorFlow / Keras 2.21 · Streamlit · NumPy · Pillow · scikit
 
 - **Not a clinical tool.** The model was trained on one public image set and is not validated on real patients, scanners, or hospitals.
 - **Single 2D slices.** Real diagnosis uses full 3D scans, patient history, and expert review.
-- **Missed tumors.** A noticeable share of tumor images is labelled "notumor" (95 of 1,200 for the baseline CNN).
-- **Validation vs test gap.** Validation accuracy (about 90% to 93%) is higher than test accuracy for the baseline CNN (83.1%), so always compare models on the Testing folder.
+- **Missed tumors.** A noticeable share of tumor images is labelled "notumor" (80 of 1,200 for the optimized CNN), and glioma recall is only 0.69.
+- **Validation vs test gap.** Validation accuracy (about 93%) is higher than the test accuracy of the optimized CNN (86.2%), so always compare models on the Testing folder.
 - **Training split.** The models in notebooks 03 to 06 were trained on their own 80/20 split of the Training folder, without removing the duplicate copies that notebook 02 removes. Validation numbers can therefore be slightly optimistic. The Testing folder shares no identical file with Training.
 - **Augmentation** was explored in notebook 02 but is not used in the final model. It is a possible future improvement.
 
@@ -181,5 +187,4 @@ Python 3.13 · TensorFlow / Keras 2.21 · Streamlit · NumPy · Pillow · scikit
 
 ## Author
 
-**Shreyas HS**
-TODO: add your GitHub and LinkedIn links
+**Shreyas HS** · [GitHub](https://github.com/Shreyashs-dg) · [LinkedIn](https://www.linkedin.com/in/shreyas-hs-a01714343/)
