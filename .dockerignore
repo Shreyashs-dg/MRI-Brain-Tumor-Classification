@@ -1,12 +1,33 @@
-
+# Environments
 .venv/
 venv/
+.env
+
+# Git and editor files
 .git/
 .gitignore
+.vscode/
+.idea/
+
+# Not needed to run the app
 dataset/
 notebooks/
 images/
-__pycache__/
-*.pyc
+reports/
+*.ipynb
 .ipynb_checkpoints/
 README.md
+requirements-dev.txt
+
+# Python cache (any folder depth)
+**/__pycache__/
+*.pyc
+
+# Only the optimized model is used by the app
+models/*
+!models/optimized_cnn_brain_tumor.keras
+
+# OS and log files
+.DS_Store
+Thumbs.db
+*.log

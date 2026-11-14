@@ -1,173 +1,185 @@
-# MRI Brain Tumor Classification using ANN and CNN
+#  MRI Brain Tumor Classification
 
-## Project Overview
+A deep-learning project that classifies a brain MRI scan into one of four classes: **glioma**, **meningioma**, **pituitary tumor**, or **no tumor**. It covers the full workflow: data exploration, preprocessing, ANN and CNN models, evaluation, tuning, and deployment as a Streamlit web app.
 
-This project applies Deep Learning techniques to classify brain MRI images into four categories:
+> **Disclaimer:** This is an educational project. It is **not a medical diagnostic tool** and must not be used for diagnosis or treatment decisions. Always consult a qualified doctor.
 
-1. Glioma
-2. Meningioma
-3. No Tumor
-4. Pituitary
+**Live demo:** TODO: add your Streamlit link
+** Dataset:** TODO: add dataset name and source link
 
-Three models were developed or retained during the project:
+![App screenshot](images/app_screenshot.png)
 
-- Artificial Neural Network (ANN)
-- Baseline Convolutional Neural Network (CNN)
-- Optimized Convolutional Neural Network (Optimized CNN)
+---
 
-The optimized CNN is integrated into a Streamlit application for MRI image prediction.
+## Highlights
 
-**Disclaimer:** This is an educational project, not a medical diagnostic tool. Predictions must not replace professional medical evaluation.
+- Full pipeline: EDA → preprocessing → ANN → CNN → evaluation → tuning → deployment
+- Compared an ANN baseline with a CNN on a held-out **Testing set of 1,600 images** the models never saw during training
+- Found and handled data problems: mixed image formats, different image sizes, and duplicate images
+- Reduced overfitting with dropout and a learning-rate and model-size search
+- Deployed as a Streamlit app, with a Dockerfile for containerized runs
+
+---
+
+## Results
+
+All numbers below are measured on the **Testing folder (1,600 images, 400 per class)**.
+
+| Model | Test accuracy | Macro F1 |
+|---|---|---|
+| ANN (fully connected) | 74.5% | 0.74 |
+| CNN (baseline) | 83.1% | 0.83 |
+| **Optimized CNN** (dropout 0.5, lr 0.001) | **TODO: add test accuracy** | **TODO** |
+
+The optimized CNN reached about **97% training accuracy and 93.3% validation accuracy**, with a much smaller gap between the two than the baseline CNN (about 99% and 90%).
+
+![ANN vs CNN test accuracy](images/05_test_accuracy_comparison.png)
+
+**Baseline CNN, per class (Testing folder):**
+
+| Class | Precision | Recall | F1 |
+|---|---|---|---|
+| glioma | 0.83 | 0.70 | 0.76 |
+| meningioma | 0.76 | 0.81 | 0.78 |
+| notumor | 0.81 | 0.99 | 0.89 |
+| pituitary | 0.96 | 0.82 | 0.88 |
+
+![Confusion matrices: ANN and CNN](images/05_confusion_matrices.png)
+
+![Optimized CNN confusion matrix](images/06_optimized_cnn_confusion_matrix.png)
+
+**What the results show**
+- The CNN beats the ANN by about 9 percentage points. Flattening an image for an ANN throws away the 2D structure that a CNN keeps.
+- "No tumor" is found almost perfectly (recall 0.99), but the baseline CNN labels **95 of 1,200 real tumor images as "notumor"**. In a medical setting this is the most serious kind of mistake.
+- Glioma has the lowest recall (0.70), and glioma and meningioma are the classes most often confused.
+- Validation accuracy was higher than test accuracy, because validation images were a random slice of the Training folder. The Testing folder is the honest number to report.
+
+---
 
 ## Dataset
 
-**Dataset:** Brain Tumor MRI Dataset by Masoud Nickparvar
+**7,200 MRI images** in four classes, already split into folders:
 
-[Kaggle Dataset](https://www.kaggle.com/datasets/masoudnickparvar/brain-tumor-mri-dataset)
+| Split | glioma | meningioma | notumor | pituitary | Total |
+|---|---|---|---|---|---|
+| Training | 1,400 | 1,400 | 1,400 | 1,400 | 5,600 |
+| Testing | 400 | 400 | 400 | 400 | 1,600 |
 
-| Dataset | Images |
-|---|---:|
-| Training | 5,600 |
-| Testing | 1,600 |
-| **Total** | **7,200** |
+![Class distribution](images/01_class_distribution.png)
 
-The dataset contains four equally represented classes:
+![Sample images](images/01_sample_images.png)
 
-| Class | Training | Testing | Total |
-|---|---:|---:|---:|
-| Glioma | 1,400 | 400 | 1,800 |
-| Meningioma | 1,400 | 400 | 1,800 |
-| No Tumor | 1,400 | 400 | 1,800 |
-| Pituitary | 1,400 | 400 | 1,800 |
-| **Total** | **5,600** | **1,600** | **7,200** |
+**Data checks (notebook 01):**
+- **No corrupted images** (7,196 JPEG and 4 PNG files).
+- **Mixed colour modes** (RGB, grayscale, RGBA, palette): every image is loaded as 1-channel grayscale.
+- **Different image sizes:** about 70% are 512 x 512, the rest vary and some are not square. Everything is resized to 224 x 224.
+- **Duplicate images:** 153 groups of identical files (340 files, 7,013 unique images). **No image appears in both Training and Testing**, so the test results are not inflated by exact copies.
 
-## Technologies Used
+---
 
-- Python 3.13.3
-- TensorFlow 2.21.0
-- Keras
-- NumPy 2.5.4
-- Pandas 3.1.1
-- Matplotlib 3.11.2
-- Seaborn 0.13.2
-- Scikit-learn 1.9.1
-- Pillow 13.0.0
-- Streamlit 1.67.0
-- Jupyter Notebook
-- Git and GitHub
+## Method
 
-## Image Preprocessing
+| Step | Notebook | What it does |
+|---|---|---|
+| 1 | `01_dataset_exploration` | Class balance, sample images, corrupted files, formats and sizes, duplicate detection |
+| 2 | `02_preprocessing` | Resize to 224 x 224, grayscale, divide by 255, label encoding, duplicate removal, 80/20 train/validation split, augmentation demo |
+| 3 | `03_ann_model` | ANN baseline: Dense 256 → 128 → 64 → 4 on flattened images |
+| 4 | `04_cnn_model` | CNN: 2 convolution + pooling blocks, Dense 128, softmax output |
+| 5 | `05_model_evaluation` | Test accuracy, confusion matrices, precision/recall/F1, error analysis |
+| 6 | `06_model_optimization` | Model-size, learning-rate and dropout experiments; final optimized CNN |
 
-- Image resizing: 224 × 224 pixels
-- Grayscale image conversion
-- Pixel normalization: 0 to 1
-- Label encoding
-- Training and validation splitting
-- Image data augmentation
+**Final model:** `Conv(32) → MaxPool → Conv(64) → MaxPool → Flatten → Dense(128) → Dropout(0.5) → Dense(4, softmax)`, about 25.7 million parameters. Input: a 224 x 224 grayscale image. Training: Adam (learning rate 0.001), sparse categorical cross-entropy, batch size 16, 10 epochs.
 
-## Model Performance
+**Tuning findings (validation set)**
+- Model size: small, baseline and large CNNs reached about the same best validation accuracy (92% to 93%), so the baseline size was kept.
+- Learning rate: 0.01 failed to learn (25%, which is guessing for 4 classes), 0.0001 was slower, and **0.001** was best.
+- Dropout: dropout 0.5 shrank the gap between training and validation accuracy from about 7 points to about 3 points and gave the lowest validation loss.
 
-The following results were obtained on the held-out test dataset of 1,600 images.
+![Dropout comparison](images/06_dropout_comparison.png)
 
-| Model | Test Accuracy | Correct Predictions |
-|---|---:|---:|
-| ANN | 74.50% | 1,192 / 1,600 |
-| Baseline CNN | 83.13% | 1,330 / 1,600 |
+---
 
-The baseline CNN achieved an improvement of 8.63 percentage points over the ANN in test accuracy.
+## Project structure
 
-An optimized CNN was also developed through architecture, learning-rate, and regularization experiments. Its exact test performance is not reported here.
-
-## Project Structure
-
-```text
+```
 MRI-Brain-Tumor-Classification/
-├── dataset/
-│   ├── Training/
-│   └── Testing/
-├── notebooks/
-│   ├── 01_dataset_exploration.ipynb
-│   ├── 02_preprocessing.ipynb
-│   ├── 03_ann_model.ipynb
-│   ├── 04_cnn_model.ipynb
-│   ├── 05_model_evaluation.ipynb
-│   └── 06_model_optimization.ipynb
-├── src/
-│   └── predict.py
-├── models/
 ├── app/
-│   └── app.py
-├── images/
-├── .gitignore
-├── requirements.txt
+│   └── app.py                  # Streamlit web app (UI only)
+├── src/
+│   ├── __init__.py
+│   ├── config.py               # model path, image size, class names
+│   ├── preprocess.py           # image → model input (same steps as training)
+│   └── predict.py              # loads the model once, returns the prediction
+├── notebooks/                  # 01 to 06, run in order
+├── models/                     # trained models (.keras)
+├── images/                     # figures used in this README
+├── dataset/                    # Training/ and Testing/ (not included in the repo)
+├── Dockerfile
+├── requirements.txt            # packages needed to run the app
+├── requirements-dev.txt        # extra packages for the notebooks
 └── README.md
 ```
 
-## Installation and Setup
+---
 
-### 1. Clone the repository
+## Run it locally
 
-```bash
-git clone https://github.com/Shreyashs-dg/MRI-Brain-Tumor-Classification.git
-```
-
-### 2. Navigate to the project directory
-
-```bash
-cd MRI-Brain-Tumor-Classification
-```
-
-### 3. Create a virtual environment
-
+**1. Install**
 ```bash
 python -m venv .venv
-```
-
-### 4. Activate the environment (Windows)
-
-```powershell
-.venv\Scripts\Activate.ps1
-```
-
-### 5. Install dependencies
-
-```bash
+.venv\Scripts\activate          # Windows (Mac/Linux: source .venv/bin/activate)
 pip install -r requirements.txt
 ```
 
-### 6. Download the dataset
-
-Download the dataset from Kaggle and place its Training and Testing folders inside the `dataset/` directory.
-
-### 7. Model files
-
-The trained model files are stored locally in the `models/` directory and are excluded from Git tracking. Make sure the required optimized CNN model is available at:
-
-`models/optimized_cnn_brain_tumor.keras`
-
-## Run the Streamlit Application
-
-From the project root, run:
-
+**2. Start the app**
 ```bash
 streamlit run app/app.py
 ```
+Open http://localhost:8501 and upload an MRI image (JPG or PNG).
 
-Upload an MRI image to view the predicted class, confidence score, and class probabilities.
+**3. Or run with Docker**
+```bash
+docker build -t mri-app .
+docker run -p 8501:8501 mri-app
+```
 
-## Project Development Roadmap
+**4. Use the model from Python**
+```python
+from src.predict import predict_mri
 
-1. Project Fundamentals & Setup
-2. Data Collection & EDA
-3. Image Preprocessing
-4. ANN Implementation
-5. CNN Implementation
-6. Model Evaluation & Comparison
-7. Model Optimization
-8. Model Saving & Prediction
-9. Application Development
-10. Finalization & Deployment
+result = predict_mri("path/to/mri_image.jpg")
+print(result["predicted_class"], result["confidence"])
+```
+
+**Re-run the notebooks:** `pip install -r requirements-dev.txt`, place the dataset in `dataset/Training/` and `dataset/Testing/`, then run notebooks 01 to 06 in order.
+
+---
+
+## Tech stack
+
+Python 3.13 · TensorFlow / Keras 2.21 · Streamlit · NumPy · Pillow · scikit-learn · pandas · Matplotlib · Docker
+
+---
+
+## Limitations
+
+- **Not a clinical tool.** The model was trained on one public image set and is not validated on real patients, scanners, or hospitals.
+- **Single 2D slices.** Real diagnosis uses full 3D scans, patient history, and expert review.
+- **Missed tumors.** A noticeable share of tumor images is labelled "notumor" (95 of 1,200 for the baseline CNN).
+- **Validation vs test gap.** Validation accuracy (about 90% to 93%) is higher than test accuracy for the baseline CNN (83.1%), so always compare models on the Testing folder.
+- **Training split.** The models in notebooks 03 to 06 were trained on their own 80/20 split of the Training folder, without removing the duplicate copies that notebook 02 removes. Validation numbers can therefore be slightly optimistic. The Testing folder shares no identical file with Training.
+- **Augmentation** was explored in notebook 02 but is not used in the final model. It is a possible future improvement.
+
+## Future work
+
+- Add data augmentation (small rotations, shifts, zoom) to the CNN
+- Try transfer learning (for example ResNet or EfficientNet)
+- Use class-wise recall as the main metric and reduce missed tumors
+- Add Grad-CAM heatmaps to show which part of the scan drove the prediction
+
+---
 
 ## Author
 
-Developed as a hands-on Deep Learning project.
+**Shreyas HS**
+TODO: add your GitHub and LinkedIn links

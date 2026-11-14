@@ -1,20 +1,16 @@
-
 FROM python:3.13-slim
 
 WORKDIR /app
 
 COPY requirements.txt .
-
 RUN python -m pip install --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -r requirements.txt
 
 COPY app/ ./app/
 COPY src/ ./src/
+COPY models/optimized_cnn_brain_tumor.keras ./models/optimized_cnn_brain_tumor.keras
 
-RUN mkdir -p models
-
+ENV PYTHONUNBUFFERED=1
 EXPOSE 8501
 
-CMD ["streamlit", "run", "app/app.py", "--server.address=0.0.0.0", "--server.port=8501"]
-
-
+CMD ["streamlit", "run", "app/app.py", "--server.address=0.0.0.0", "--server.port=8501", "--server.headless=true"]
