@@ -28,3 +28,4 @@ def preprocess_image(image):
     tensor = tf.image.resize(tensor, IMG_SIZE)
     tensor = tf.cast(tensor, tf.float32) / 255.0
     return tf.expand_dims(tensor, axis=0).numpy()   # shape (1, 224, 224, 1)
+    

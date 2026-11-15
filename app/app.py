@@ -97,4 +97,4 @@ with right:
         st.progress(min(max(probability / 100, 0.0), 1.0), text=f"{DISPLAY_NAMES[name]}: {probability:.2f}%")
 
 st.divider()
-st.caption("Educational AI project. Not for clinical use.")
+st.caption("Educational AI project -shreyas hs")
